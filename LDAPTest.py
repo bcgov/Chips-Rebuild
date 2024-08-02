@@ -1,5 +1,6 @@
 import ldap3
 from dotenv import load_dotenv
+import pandas as pd
 import os
 import openpyxl
 
@@ -15,15 +16,15 @@ def get_all_users(username, password, server_url, base_dn, empID):
                       attributes=ldap3.ALL_ATTRIBUTES)
 
     # Retrieve users and their attributes
-    users_with_lastname = []
+    users_with_empID = []
     for entry in connection.entries:
         
-        users_with_lastname.append(entry)
+        users_with_empID.append(entry)
 
     # Close connection
     connection.unbind()
 
-    return users_with_lastname
+    return users_with_empID
 
 # Locate the column that's the empID to search the LDAP
 def find_column_index(sheet, column_label):
@@ -56,6 +57,10 @@ def read_PSA_report(filename, empID_label):
     # Close the workbook
     wb.close()
 
+def combine_Records():
+    return
+
+
 # LDAP server configuration
 load_dotenv()
 ldap_username = os.environ.get('ldap_username')
@@ -64,15 +69,19 @@ ldap_server_url = os.environ.get('ldap_server_url')
 ldap_base_dn = os.environ.get('ldap_base_dn')
 psa_report_path = os.environ.get('psa_report_path')
 output_file_path = os.environ.get('output_path')
+ldap_search_filter = '(employeeID={})'
 
-read_PSA_report(psa_report_path, 'EmplID')
+#read_PSA_report(psa_report_path, 'EmplID')
+
+psa_report = pd.read_excel(psa_report_path, engine='openpyxl')
 
 #users = get_all_users(ldap_username, ldap_password, ldap_server_url, ldap_base_dn, empID)
 
 
-#with open(output_file_path, 'w') as output_file:
-#    for attribute in users:
-#        output_file.write(f"{attribute}\n")
-#for user in users:
-#    print(user)
+# Iterate over the excel file
+for index, row in psa_report:
+    employee_id = row['EmplID']
+    search_filter= ldap_search_filter.format(employee_id)
+    print(search_filter)
+
 
